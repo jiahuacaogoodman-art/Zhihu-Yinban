@@ -705,6 +705,45 @@ class CareStore:
         return {"total": total, "by_severity": by_severity,
                 "by_type": by_type, "by_status": by_status, "period": f"近{days}天"}
 
+
+    def get_operations_overview(self) -> dict:
+        """运营总览：养老院基础运营看板指标。"""
+        with self._connect() as conn:
+            total_beds = conn.execute("SELECT COUNT(*) AS c FROM beds").fetchone()["c"]
+            occupied_beds = conn.execute(
+                "SELECT COUNT(*) AS c FROM beds WHERE status = 'occupied'"
+            ).fetchone()["c"]
+
+            total_residents = conn.execute(
+                "SELECT COUNT(*) AS c FROM admissions WHERE status = 'active'"
+            ).fetchone()["c"]
+            pending_admissions = conn.execute(
+                "SELECT COUNT(*) AS c FROM admissions WHERE status NOT IN ('active', 'discharged', 'rejected')"
+            ).fetchone()["c"]
+
+            open_incidents = conn.execute(
+                "SELECT COUNT(*) AS c FROM incidents WHERE status IN ('reported', 'processing')"
+            ).fetchone()["c"]
+            pending_handovers = conn.execute(
+                "SELECT COUNT(*) AS c FROM handovers WHERE status = 'pending'"
+            ).fetchone()["c"]
+
+            today_care_records = conn.execute(
+                "SELECT COUNT(*) AS c FROM care_records WHERE DATE(recorded_at) = DATE('now', 'localtime')"
+            ).fetchone()["c"]
+
+        occupancy_rate = round((occupied_beds / total_beds) * 100, 2) if total_beds else 0.0
+        return {
+            "total_beds": total_beds,
+            "occupied_beds": occupied_beds,
+            "occupancy_rate": occupancy_rate,
+            "total_residents": total_residents,
+            "pending_admissions": pending_admissions,
+            "open_incidents": open_incidents,
+            "pending_handovers": pending_handovers,
+            "today_care_records": today_care_records,
+        }
+
     # ================================================================
     # 护理记录留痕
     # ================================================================
