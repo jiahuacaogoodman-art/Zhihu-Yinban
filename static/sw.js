@@ -1,9 +1,8 @@
-/* 智护银伴 Service Worker v22 · 玻璃设计系统 + 手机适配 */
-const CACHE_NAME = 'zhihu-v22-glass-mobile';
+/* 智护银伴 Service Worker v23 · SPA cache cleanup */
+const CACHE_NAME = 'zhihu-v23-spa-cache-cleanup';
 const STATIC_ASSETS = [
   '/',
   '/nurse',
-  '/static/index.html',
   '/static/nurse.html',
   '/static/manifest.json',
   '/static/design/tokens.css',
@@ -17,6 +16,12 @@ const STATIC_ASSETS = [
   '/static/icons/icon-192.png',
   '/static/icons/icon-512.png',
 ];
+
+const LEGACY_ENTRYPOINTS = new Set([
+  '/static/index.html',
+  '/legacy',
+  '/legacy/',
+]);
 
 self.addEventListener('install', event => {
   event.waitUntil(
@@ -36,6 +41,12 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
+
+  // 旧版入口不再由 SW 离线缓存兜底，强制交给服务端返回真实 404/重定向。
+  if (url.origin === self.location.origin && LEGACY_ENTRYPOINTS.has(url.pathname)) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
 
   // API 请求：网络优先，离线返回提示
   if (url.pathname.startsWith('/api/')) {
@@ -69,7 +80,9 @@ self.addEventListener('fetch', event => {
     caches.open(CACHE_NAME).then(cache =>
       cache.match(event.request).then(cached => {
         const fetchPromise = fetch(event.request).then(res => {
-          if (res && res.status === 200) cache.put(event.request, res.clone());
+          if (res && res.status === 200 && !LEGACY_ENTRYPOINTS.has(url.pathname)) {
+            cache.put(event.request, res.clone());
+          }
           return res;
         }).catch(() => null);
         return cached || fetchPromise;
