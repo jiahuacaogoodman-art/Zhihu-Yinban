@@ -60,7 +60,7 @@ from app.middleware.auth import AuthTokenMiddleware, ReadAuditMiddleware
 from app.routers import auth as auth_router
 from app.routers import ehr, nursing
 from app.routers import beds, care_levels, handovers, incidents, care_records
-from app.routers import admissions
+from app.routers import admissions, operations
 from app.services.pii_crypto import is_encryption_enabled
 from app.services.user_store import UserStore
 
@@ -290,6 +290,7 @@ app.include_router(handovers.router, prefix="/api", tags=["Handover / SBAR"])
 app.include_router(incidents.router, prefix="/api", tags=["Incident Report"])
 app.include_router(care_records.router, prefix="/api", tags=["Care Records"])
 app.include_router(admissions.router, prefix="/api", tags=["Admission Workflow"])
+app.include_router(operations.router, prefix="/api", tags=["Operations Dashboard"])
 
 # ----------------------------------------------------------------
 # 鉴权中间件：保护 /api/* 和 /uploads/*

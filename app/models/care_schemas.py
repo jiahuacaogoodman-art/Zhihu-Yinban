@@ -315,3 +315,17 @@ __all__ = [
     # Care Record
     "CareRecordCreate", "CareRecordResponse", "CareRecordListResponse",
 ]
+
+# ============================================================
+# 6. 运营总览（养老院管理驾驶舱）
+# ============================================================
+class OperationsOverviewResponse(BaseModel):
+    """GET /api/operations/overview"""
+    total_beds: int = 0
+    occupied_beds: int = 0
+    occupancy_rate: float = 0.0
+    total_residents: int = 0
+    pending_admissions: int = 0
+    open_incidents: int = 0
+    pending_handovers: int = 0
+    today_care_records: int = 0
